@@ -1,0 +1,7 @@
+#+TITLE: Idris2 Toolkit.
+
+I've developed a fair few Idris projects over the years.
+This repository will collate the Idris packages that I find most useful into a single project.
+My years of project development and artefact creation makes me believe that a monolithic toolkit is better to manage, and present to the community, and to vendor in these packages for each individual research project.
+
+Dependency hell exists EVERYWHERE!
