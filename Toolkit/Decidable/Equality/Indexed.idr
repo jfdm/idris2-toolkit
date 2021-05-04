@@ -47,7 +47,8 @@ negEqSym p h = p (sym h)
 
 namespace Index
   public export
-  indexAreSame : (contra : i = j -> Void)
+  indexAreSame : {i,j : iTy}
+              -> (contra : i = j -> Void)
               -> {x : eTy i}
               -> {y : eTy j}
               -> (prf    : Equals iTy eTy x y)
@@ -55,14 +56,16 @@ namespace Index
   indexAreSame contra (Same Refl prfVal) = contra Refl
 
   public export
-  decEq : DecEq iTy
-       => DecEqIdx iTy eTy
-       => {i,j : iTy}
+  decEq : {iTy : Type}
+       -> {eTy : iTy -> Type}
+       -> DecEqIdx iTy eTy
+       => {i : iTy}
+       -> {j : iTy}
        -> (x : eTy i)
        -> (y : eTy j)
        -> Dec (Equals iTy eTy x y)
   decEq x y {i} {j} {eTy} with (decEq i j)
-    decEq x y {i = i} {j = i} {  eTy = eTy} | (Yes Refl) = Indexed.decEq x y Refl
+    decEq x y {i = i} {j = i} {eTy = eTy} | (Yes Refl) = Indexed.decEq x y Refl
     decEq x y {i = i} {j = j} {eTy = eTy} | (No contra) = No (indexAreSame contra)
 
 -- --------------------------------------------------------------------- [ EOF ]

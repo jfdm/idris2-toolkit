@@ -27,3 +27,9 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Text.Lexer.Run
 
         , Toolkit.System
+
+        , Toolkit.Options.ArgParse.Error
+        , Toolkit.Options.ArgParse.Lexer
+        , Toolkit.Options.ArgParse.Parser
+        , Toolkit.Options.ArgParse.Parser.API
+        , Toolkit.Options.ArgParse
