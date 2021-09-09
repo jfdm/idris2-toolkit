@@ -6,9 +6,16 @@ modules = Toolkit.Decidable.Equality.Indexed
 
         , Toolkit.Data.Vect.Extra
 
+        , Toolkit.Data.List.Filter
+        , Toolkit.Data.List.Interleaving
+        , Toolkit.Data.List.Subset
+
+
         , Toolkit.Data.DList
         , Toolkit.Data.DList.Elem
         , Toolkit.Data.DList.DeBruijn
+
+        , Toolkit.Data.DList.Interleaving
 
         , Toolkit.Data.DVect
         , Toolkit.Data.DVect.Elem
@@ -33,3 +40,6 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Options.ArgParse.Parser
         , Toolkit.Options.ArgParse.Parser.API
         , Toolkit.Options.ArgParse
+
+        , Toolkit.Decidable.Do
+        , Toolkit.Decidable.Equality.Views
