@@ -4,11 +4,17 @@ depends = contrib
 
 modules = Toolkit.Decidable.Equality.Indexed
 
+        , Toolkit.Data.Pair
+        , Toolkit.Data.Nat
+
+        , Toolkit.Data.Vect.Leanings
         , Toolkit.Data.Vect.Extra
 
         , Toolkit.Data.List.Filter
         , Toolkit.Data.List.Interleaving
         , Toolkit.Data.List.Subset
+        , Toolkit.Data.List.Occurs
+        , Toolkit.Data.List.Size
 
 
         , Toolkit.Data.DList
