@@ -3,6 +3,7 @@ module Toolkit.Options.ArgParse.Lexer
 import Data.String
 import Text.Lexer
 
+
 import public Toolkit.Text.Lexer.Run
 
 %default total
@@ -58,10 +59,9 @@ rawTokens =
   ]
 
 keep : WithBounds Token -> Bool
-keep (MkBounded t _ _)
-  = case t of
-      (WS x) => False
-      _      => True
+keep (MkBounded t _ _) with (t)
+  keep (MkBounded t _ _) | (WS x) = False
+  keep (MkBounded t _ _) | _      = True
 
 export
 ArgParseLexer : Lexer Token

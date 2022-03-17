@@ -16,11 +16,11 @@ import public Toolkit.Text.Parser.Support
 namespace ArgParse
   public export
   Rule : Type -> Type
-  Rule = Rule () Token
+  Rule = Rule Unit Token
 
   public export
   RuleEmpty : Type -> Type
-  RuleEmpty = RuleEmpty () Token
+  RuleEmpty = RuleEmpty Unit Token
 
 -- Some basic parsers used by all the intermediate forms
 

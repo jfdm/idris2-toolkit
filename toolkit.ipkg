@@ -14,11 +14,15 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Data.List.Interleaving
         , Toolkit.Data.List.Subset
         , Toolkit.Data.List.Occurs
+        , Toolkit.Data.List.Occurs.Does
+        , Toolkit.Data.List.Occurs.Does.Not
+        , Toolkit.Data.List.Occurs.Error
         , Toolkit.Data.List.Size
-
+        , Toolkit.Data.List.View.PairWise
 
         , Toolkit.Data.DList
         , Toolkit.Data.DList.Elem
+        , Toolkit.Data.DList.Any
         , Toolkit.Data.DList.DeBruijn
 
         , Toolkit.Data.DList.Interleaving
@@ -32,6 +36,11 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Data.Rig
 
         , Toolkit.Decidable.Informative
+
+        , Toolkit.Data.Graph.EdgeBounded
+        , Toolkit.Data.Graph.EdgeBounded.DegreeCommon
+        , Toolkit.Data.Graph.EdgeBounded.HasExactDegree
+        , Toolkit.Data.Graph.EdgeBounded.HasExactDegree.All
 
         , Toolkit.Text.Parser.Support
         , Toolkit.Text.Parser.Location
@@ -49,3 +58,10 @@ modules = Toolkit.Decidable.Equality.Indexed
 
         , Toolkit.Decidable.Do
         , Toolkit.Decidable.Equality.Views
+
+        , Toolkit.DeBruijn.Context
+        , Toolkit.DeBruijn.Environment
+        , Toolkit.DeBruijn.Renaming
+        , Toolkit.DeBruijn.Substitution
+
+        , Toolkit.TheRug
