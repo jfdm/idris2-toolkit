@@ -8,6 +8,7 @@ import System
 import System.File
 import System.Clock
 import Data.Vect
+import Data.String
 
 import Decidable.Equality
 
@@ -160,6 +161,26 @@ namespace Decidable
   embed err (No prfWhyNot)
     = throw err
 
+  export
+  %inline
+  when : (result : Dec      a)
+      -> (this   : Lazy (TheRug e ()))
+                   -> TheRug e ()
+  when (Yes _) this
+    = this
+  when (No _) _
+    = pure ()
+
+  export
+  %inline
+  whenNot : (result : Dec      r)
+         -> (this   : Lazy (TheRug e ()))
+                   -> TheRug e ()
+  whenNot (Yes _) _
+    = pure ()
+  whenNot (No _) this
+    = this
+
   namespace Informative
     export
     %inline
@@ -291,19 +312,18 @@ namespace Cheap
       = do start <- (embed $ clockTime UTC)
            res   <- embed  (run (\err => do stop <- clockTime UTC
                                             putStrLn "Error Happened"
-                                            printLn err
                                             let d = timeDifference stop start
                                             if showTime
-                                              then do print d
-                                                      putStrLn msg
+                                              then do putStrLn (unwords [msg, show d])
+                                                      printLn err
                                                       exitFailure
                                               else do putStrLn msg
+                                                      printLn err
                                                       exitFailure)
                                 (\res => do stop <- clockTime UTC
                                             let d = timeDifference stop start
                                             if showTime
-                                              then do print d
-                                                      putStrLn msg
+                                              then do putStrLn (unwords [msg, show d])
                                                       pure res
                                               else do putStrLn msg
                                                       pure res)

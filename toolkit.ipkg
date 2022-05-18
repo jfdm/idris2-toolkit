@@ -19,11 +19,12 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Data.List.Occurs.Error
         , Toolkit.Data.List.Size
         , Toolkit.Data.List.View.PairWise
+        , Toolkit.Data.List.AtIndex
 
         , Toolkit.Data.DList
         , Toolkit.Data.DList.Elem
         , Toolkit.Data.DList.Any
-        , Toolkit.Data.DList.DeBruijn
+        , Toolkit.Data.DList.AtIndex
 
         , Toolkit.Data.DList.Interleaving
 
@@ -59,6 +60,7 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Decidable.Do
         , Toolkit.Decidable.Equality.Views
 
+        , Toolkit.DeBruijn.Context.Item
         , Toolkit.DeBruijn.Context
         , Toolkit.DeBruijn.Environment
         , Toolkit.DeBruijn.Renaming

@@ -1,347 +1,128 @@
+|||
+|||
+||| Module    : Context.idr
+||| Copyright : (c) Jan de Muijnck-Hughes
+||| License   : see LICENSE
+|||
 module Toolkit.DeBruijn.Context
 
 import Decidable.Equality
 
-import Data.List.Elem
+import Data.DPair
 
 import Toolkit.Decidable.Informative
-import Toolkit.Decidable.Do
 
-import public Toolkit.Data.DList
-import public Toolkit.Data.DList.Elem
-import public Toolkit.Data.DList.Any
+import Toolkit.Data.List.AtIndex
+import Toolkit.Data.DList
+import Toolkit.Data.DList.AtIndex
+
+import Toolkit.DeBruijn.Context.Item
 
 %default total
 
-public export
-data Error e = NotSatisfied e
-             | NotFound
+-- A reverse cons operator.
+infixr 6 +=
 
-
-||| An item in our context, paramterised by the type collected.
-|||
-||| @kind the type of the datatype describing types
-||| @type the instance of the type being recorded.
-public export
-data Item : (kind : Type)
-         -> (type : kind)
-                 -> Type
-  where
-    I : (name : String)
-     -> (type : kind)
-             -> Item kind type
-
-
-||| A generic container to capture properties over items in the
-||| context.
-public export
-data Holds : (kind : Type)
-          -> (pred : {type : kind} -> (item : Item kind type) -> Type)
-          -> {type : kind}
-          -> (item : Item kind type)
-                  -> Type
-  where
-    H : {pred : {type : kind} -> (item : Item kind type) -> Type}
-     -> {i    : kind}
-     -> {item : Item kind i}
-     -> (prf  : pred item)
-             -> Holds kind pred item
-
-||| Does the given predicate hold over the context item
-holds : {pred : {type : kind} -> (item : Item kind type) -> Type}
-     -> (func : {type : kind} -> (item : Item kind type) -> DecInfo err (pred item))
-     -> {type : kind}
-     -> (item : Item kind type)
-             -> DecInfo (Error err)
-                        (Holds kind pred item)
-holds f i with (f i)
-  holds f i | (Yes prfWhy)
-    = Yes (H prfWhy)
-  holds f i | (No msg contra)
-    = No (NotSatisfied msg)
-         (\(H prf) => contra prf)
-
-||| A generic container to capture properties over items in the
-||| context.
-public export
-data HoldsFor : (kind : Type)
-             -> (pred : (type : kind) -> Type)
-             -> (key  : String)
-             -> {type : kind}
-             -> (item : Item kind type)
-                     -> Type
-  where
-    H4 : {pred : (type : kind) -> Type}
-      -> {i    : kind}
-      -> (prfK : key = str)
-      -> (prf  : pred i)
-              -> HoldsFor kind pred key (I str i)
-
-||| Does the given predicate hold over the context item
-holdsFor : {pred : (type : kind) -> Type}
-        -> (func : (type : kind) -> DecInfo err (pred type))
-        -> (key  : String)
-        -> {type : kind}
-        -> (item : Item kind type)
-                -> DecInfo (Error err)
-                           (HoldsFor kind pred key item)
-holdsFor func key (I name type) with (decEq key name)
-  holdsFor func key (I key type) | (Yes Refl) with (func type)
-    holdsFor func key (I key type) | (Yes Refl) | (Yes prfWhy)
-      = Yes (H4 Refl prfWhy)
-
-    holdsFor func key (I key type) | (Yes Refl) | (No msg contra)
-      = No (NotSatisfied msg)
-           (\(H4 Refl prf) => contra prf)
-
-  holdsFor func key (I name type) | (No contra)
-    = No NotFound
-         (\(H4 Refl prf) => contra Refl)
+namespace List
+  ||| Append `x` to the head of `xs`.
+  public export
+  (+=) : List a -> a -> List a
+  (+=) xs x = x :: xs
 
 public export
 Context : (kind : Type) -> (types : List kind) -> Type
-Context kind = DList kind (Item kind)
+Context kind = DList kind Item
 
-public export
-extend : (ctxt  : Context kind kinds)
+export
+extend : (ctxt  : Context kind types)
       -> (label : String)
       -> (type  : kind)
-               -> Context kind (type::kinds)
-extend ctxt l type = I l type :: ctxt
+               -> Context kind (types += type)
+extend ctxt label type
+  = I label type :: ctxt
+
+export
+(+=) : (ctxt  : Context kind types)
+    -> (label : String)
+    -> (type  : kind)
+             -> Context kind (types += type)
+(+=) = extend
 
 ||| A quantifier over the context that the given predicate holds.
 |||
-||| This is modelled after De Bruijn indices, and the underlying quantifier is `Any`.
+||| This is modelled after De Bruijn indices, and the underlying
+||| quantifier is `Any`.
 |||
-||| We will make it nameless later on, as if we try now the indicies are not sufficiently linked to prove false.
 public export
-data Exists : {kind  : Type}
+data Exists : (kind : Type)
+           -> (pred  : (type : kind) -> Type)
+           -> (key   : String)
            -> {types : List kind}
-           -> (pred  : {type : kind} -> (item : Item kind type) -> Type)
            -> (ctxt  : Context kind types)
                     -> Type
   where
-    B : {pred : {type : kind} -> (item : Item kind type) -> Type}
-     -> {ctxt : Context kind types}
-     -> {type : kind}
-     -> (item : Item kind type)
-     -> (prfP : pred item)
-     -> (prfE : Any  kind (Item kind) (Holds kind pred) ctxt)
-             -> Exists pred ctxt
+    E : {ctxt : Context kind types}
+     -> {pred : (type : kind) -> Type}
+     -> (type : kind)
+     -> (item : Item type)
+     -> (prf  : pred type)
+     -> {loc  : Nat}
+     -> (locC : HoldsAtIndex kind Item (Holds kind pred key) ctxt loc)
+     -> (locN : AtIndex type types loc)
+             -> Exists kind pred key ctxt
 
-contextEmpty : {p : {type : kind} -> (item : Item kind type) -> Type}
-            -> Exists p [] -> Void
-contextEmpty (B _ _ (H prf)) impossible
-contextEmpty (B _ _ (T contra later)) impossible
-
-
-errFound : {p : {type : kind} -> (item : Item kind type) -> Type}
-        -> (Exists p rest -> Void)
-        -> (Holds kind p item -> Void)
-        -> Exists p (item :: rest) -> Void
-errFound f g (B (I name type) prfP (H prf))  = g prf
-errFound f _ (B (I name type) prfP (T contra later)) = f (B (I name type) prfP later)
-
-||| Does the given variable exist in the context and satisfy the given predicate.
 export
-exists : {kind : Type}
-      -> {err  : Type}
+deBruijn : {ctxt : Context kind types}
+        -> (prf  : Exists kind pred key ctxt)
+                -> (type ** Subset Nat (AtIndex type types))
+deBruijn (E type item prf locC locN)
+  = (type ** Element _ locN)
+
+namespace Exists
+  public export
+  data Error type = NotFound
+                  | NotSatisfied type
+
+isEmpty : Exists kind pred key [] -> Void
+isEmpty (E _ _ _ (Here x) _) impossible
+isEmpty (E _ _ _ (There contra later) _) impossible
+
+notLater : (Holds  kind pred key  h      -> Void)
+        -> (Exists kind pred key       t -> Void)
+        ->  Exists kind pred key (h :: t)
+        -> Void
+notLater f g (E type item prf (Here x) locN) = f x
+notLater f g (E type item prf (There contra later) (There x)) = g (E type item prf later x)
+
+export
+exists : {kind  : Type}
       -> {types : List kind}
-      -> {pred : {type : kind} -> (item : Item kind type) -> Type}
-      -> (func : {type : kind} -> (item : Item kind type) -> DecInfo err (pred item))
-      -> (ctxt : Context kind types)
-              -> DecInfo (Error err)
-                         (Exists pred ctxt)
-exists func []
+      -> {pred  : (type : kind) -> Type}
+      -> (func  : (type : kind) -> DecInfo err (pred type))
+      -> (key   : String)
+      -> (ctxt  : Context kind types)
+               -> DecInfo (Exists.Error err)
+                          (Exists kind pred key ctxt)
+
+exists f _ []
   = No NotFound
-       (contextEmpty)
+       isEmpty
+exists f key (head :: tail) with (holds f key head)
+  exists f key ((I str x) :: tail) | (Yes (H prfK prf))
+    = Yes (E _ (I str x) prf (Here (H prfK prf)) Here)
 
-exists func (elem :: rest) with (holds func elem)
-  exists func (elem :: rest) | (Yes (H prf))
-    = Yes (B elem prf (H (H prf)))
+  exists f key (head :: tail) | (No msg contra) with (exists f key tail)
+    exists f key (head :: tail) | (No msg contra) | (Yes (E type item prf locC locN))
+      = Yes (E type item prf (There contra locC) (There locN))
 
-  exists func (elem :: rest) | (No msgWhyNot prfWhyNot) with (exists func rest)
-    exists func (elem :: rest) | (No msgWhyNot prfWhyNot) | (Yes (B item prfP prfE))
-      = Yes (B item prfP (T prfWhyNot prfE))
-    exists func (elem :: rest) | (No msgWhyNot prfWhyNot) | (No x f)
-      = No x (errFound f prfWhyNot)
-
-
-||| A quantifier over the context that the given predicate holds.
-|||
-||| This is modelled after De Bruijn indices, and the underlying quantifier is `Any`.
-|||
-||| We will make it nameless later on, as if we try now the indicies are not sufficiently linked to prove false.
-public export
-data ExistsFor : {kind  : Type}
-              -> {types : List kind}
-              -> (pred  : (type : kind) -> Type)
-              -> (key   : String)
-              -> (ctxt  : Context kind types)
-                       -> Type
-  where
-    B4 : {pred : (type : kind) -> Type}
-      -> {ctxt : Context kind types}
-      -> {type : kind}
-      -> (item : Item kind type)
-      -> (prfP : pred type)
-      -> (prfE : Any kind (Item kind) (HoldsFor kind pred key) ctxt)
-              -> ExistsFor pred key ctxt
-
-e4ContextEmpty : ExistsFor pred key [] -> Void
-e4ContextEmpty (B4 _ _ (H prf)) impossible
-e4ContextEmpty (B4 _ _ (T contra later)) impossible
-
-
-e4ErrorLater : (ExistsFor pred k rest -> Void)
-            -> (HoldsFor kind pred k i -> Void)
-            -> ExistsFor pred k (i :: rest) -> Void
-e4ErrorLater f g (B4 item prfP (H prf)) = g prf
-e4ErrorLater f g (B4 item prfP (T contra later)) = f (B4 item prfP later)
-
-
-||| Does the given variable exist in the context and satisfy the given predicate.
-export
-existsFor : {kind  : Type}
-         -> {err   : Type}
-         -> {types : List kind}
-         -> {pred  : (type : kind) -> Type}
-         -> (func  : (type : kind) -> DecInfo err (pred type))
-         -> (key   : String)
-         -> (ctxt  : Context kind types)
-                  -> DecInfo (Error err)
-                             (ExistsFor pred key ctxt)
-existsFor f _ []
-  = No NotFound (e4ContextEmpty)
-existsFor f k (elem :: rest) with (holdsFor f k elem)
-  existsFor f k ((I str x) :: rest) | (Yes (H4 prfK prf))
-    = Yes (B4 (I str x) prf (H (H4 prfK prf)))
-
-  existsFor f k (elem :: rest) | (No msg contra) with (existsFor f k rest)
-    existsFor f k (elem :: rest) | (No msg contra) | (Yes (B4 item prfP prfE))
-      = Yes (B4 item prfP (T contra prfE))
-
-    existsFor f k (elem :: rest) | (No (NotSatisfied x) contra) | (No mRest cRest)
-      = No (NotSatisfied x) (e4ErrorLater cRest contra)
-    existsFor f k (elem :: rest) | (No NotFound contra) | (No mRest cRest)
-      = No mRest (e4ErrorLater cRest contra)
-
-public export
-data Nameless : {kind : Type}
-             -> {types : List kind}
-             -> (pred : {type : kind} -> (item : Item kind type) -> Type)
-             -> (ctxt : Context kind types)
-                     -> Type
-  where
-    N : {pred : {type : kind} -> (item : Item kind type) -> Type}
-     -> {ctxt : Context kind types}
-     -> (item : Item kind type)
-     -> (prf  : pred item)
-     -> (idx  : Elem type types)
-             -> Nameless pred ctxt
-
-deBruijn : {kind : Type}
-        -> {types : List kind}
-        -> {pred : {type : kind} -> (item : Item kind type) -> Type}
-        -> {ctxt : Context kind types}
-        -> (prf  : Any  kind (Item kind) (Holds kind pred) ctxt)
-                -> Nameless pred ctxt
-deBruijn (H (H prf)) = N _ prf Here
-
-deBruijn (T contra later) with (deBruijn later)
-  deBruijn (T contra later) | (N item prf idx)
-    = N item prf (There idx)
-
-||| Given a named DeBruijn index make it nameless.
-|||
-||| Future work will be to make this an efficient nameless representation using `AtIndex`.
-export
-mkNameless : {kind : Type}
-          -> {types : List kind}
-          -> {pred : {type : kind} -> (item : Item kind type) -> Type}
-          -> {ctxt : Context kind types}
-          -> (prf  : Exists   pred ctxt)
-                  -> Nameless pred ctxt
-mkNameless (B item prfP prfE) = deBruijn prfE
-
-
-namespace Named
-
-  public export
-  data IsBound : (str  : String)
-              -> {type : kind}
-              -> (item : Item kind type)
-                      -> Type
-    where
-      IsName : (prf : x = y)
-                   -> IsBound x (I y type)
-
-  isBound' : (str  : String)
-          -> (item : Item kind type)
-                  -> DecInfo () (IsBound str item)
-  isBound' str (I name type) with (decEq str name)
-    isBound' str (I str type) | (Yes Refl)
-      = Yes (IsName Refl)
-
-    isBound' str (I name type) | (No contra)
-      = No () (\(IsName Refl) => contra Refl)
-
-
-  isNotBound : {kind : Type}
-            -> {types : List kind}
-            -> {ctxt : Context kind types}
-            -> (Exists (IsBound str) ctxt -> Void)
-            ->  Exists (IsBound str) ctxt -> Void
-  isNotBound f = f
-
-  export
-  isBound : {kind : Type}
-         -> {types : List kind}
-         -> (str  : String)
-         -> (ctxt : Context kind types)
-                 -> DecInfo (Error ())
-                            (Exists (IsBound str) ctxt)
-  isBound str ctxt with (exists (isBound' str) ctxt)
-    isBound str ctxt | (Yes prf)
-      = Yes prf
-    isBound str ctxt | (No _ contra)
-      = No NotFound (isNotBound contra)
-
-namespace Result
-
-  public export
-  data Result : (kind  : Type)
-             -> (term  : (ctxt : List kind) -> (type : kind) -> Type)
-             -> (types : List kind)
-                      -> Type
-    where
-      R : (ctxt : Context kind types)
-       -> (type : kind)
-       -> (inst : term types type)
-               -> Result kind term types
-
-  public export
-  data View : (kind  : Type)
-           -> (term  : (ctxt : List kind) -> (type : kind) -> Type)
-           -> (v     : kind -> Type)
-           -> {types : List kind}
-           -> (res   : Result kind term types)
-                   -> Type where
-
-    V : {ctxt : Context kind types}
-     -> {inst : term types type}
-     -> (prf  : v type)
-             -> View kind term v (R ctxt type inst)
-
-  export
-  view : {kind  : Type}
-      -> {types : List kind}
-      -> {term  : (ctxt : List kind) -> (type : kind) -> Type}
-      -> {v     : (type : kind) -> Type}
-      -> (f     : (type : kind) -> v type)
-      -> (res   : Result kind term types)
-             -> View kind term v res
-  view f (R ctxt type inst) with (f type)
-    view f (R ctxt type inst) | res = V res
+    -- [ Note ]
+    --
+    -- we need to ensure that the 'correct' error message has been satisfied.
+    exists f key (head :: tail) | (No (NotSatisfied x) contra) | (No msgR contraR)
+      = No (NotSatisfied x)
+           (notLater contra contraR)
+    exists f key (head :: tail) | (No (WrongName x y) contra) | (No msgR contraR)
+      = No msgR
+           (notLater contra contraR)
 
 -- [ EOF ]
