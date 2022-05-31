@@ -40,6 +40,21 @@ namespace Informative
     position (There _ later)
       = S (position later)
 
+    export
+    error : NotAll p e xs -> e
+    error (Here m _)
+      = m
+    error (There _ later)
+      = error later
+
+    export
+    errorAt : NotAll p e xs -> (Nat, e)
+    errorAt (Here msg _)
+      = (Z,msg)
+
+    errorAt (There _ later) with (errorAt later)
+      errorAt (There _ later) | (loc, m) = (S loc, m)
+
   export
   all : (f  : (x : a)
                 -> DecInfo e (p x))
