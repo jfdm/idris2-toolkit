@@ -10,43 +10,56 @@ import public Toolkit.Decidable.Informative
 import        Data.Vect
 
 import        Data.Vect.Quantifiers
+import        Data.Vect.AtIndex
 
 %default total
 
 namespace Informative
 
   namespace All
-    public export
-    record Error where
-      constructor MkError
-      firstFound : Nat
+    namespace NotAll
+      public export
+      data NotAll : (p  : (x : type) -> Type)
+                 -> (e  : Type)
+                 -> (xs : Vect n type)
+                       -> Type
+        where
+          Here : (msg : e)
+              -> (prf : p x -> Void)
+                     -> NotAll p e (x::xs)
 
-  all' : (pos : Nat)
-      -> (f   : (x : a)
-                  -> Dec (p x))
-      -> (xs  : Vect n a)
-              -> DecInfo Error (All p xs)
-  all' _ _ []
-    = Yes []
+          There : {0 p     : (a : type) -> Type}
+               -> (  prf   :        p    x)
+               -> (  later : NotAll p e     xs)
+                          -> NotAll p e (x::xs)
 
-  all' pos f (x :: xs) with (f x)
-    all' pos f (x :: xs) | (Yes pH) with (all' (S pos) f xs)
-      all' pos f (x :: xs) | (Yes pH) | (Yes pT)
-        = Yes (pH :: pT)
-      all' pos f (x :: xs) | (Yes pH) | (No pR c)
-        = No pR
-             (notAllThere c)
-
-    all' pos f (x :: xs) | (No contra)
-      = No (MkError pos)
-           (notAllHere contra)
+    export
+    position : NotAll p e xs -> Nat
+    position (Here _ _)
+      = Z
+    position (There _ later)
+      = S (position later)
 
   export
   all : (f  : (x : a)
-                -> Dec (p x))
+                -> DecInfo e (p x))
      -> (xs : Vect n a)
-            -> DecInfo Error (All p xs)
-  all = all' Z
+           -> DecInfo (NotAll p e xs)
+                      (All    p   xs)
+  all f []
+    = Yes []
 
+  all f (x :: xs) with (f x)
+    all f (x :: xs) | (Yes pH) with (all f xs)
+      all f (x :: xs) | (Yes pH) | (Yes pT)
+        = Yes (pH :: pT)
+
+      all f (x :: xs) | (Yes pH) | (No m c)
+        = No (There pH m)
+             (\(y::ys) => c ys)
+
+    all f (x :: xs) | (No m c)
+      = No (Here m c)
+           (\(y::ys) => c y)
 
 -- [ EOF ]
