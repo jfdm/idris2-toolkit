@@ -20,11 +20,13 @@ namespace Informative
     namespace NotAll
       public export
       data NotAll : (p  : (x : type) -> Type)
-                 -> (e  : Type)
+                 -> (e  : (x : type) -> Type)
                  -> (xs : Vect n type)
                        -> Type
         where
-          Here : (msg : e)
+          Here : {0 e : (a : type) -> Type}
+              -> {  x : type}
+              -> (msg : e x)
               -> (prf : p x -> Void)
                      -> NotAll p e (x::xs)
 
@@ -41,23 +43,23 @@ namespace Informative
       = S (position later)
 
     export
-    error : NotAll p e xs -> e
+    error : NotAll p e xs -> (x ** e x)
     error (Here m _)
-      = m
+      = (_ ** m)
     error (There _ later)
       = error later
 
     export
-    errorAt : NotAll p e xs -> (Nat, e)
+    errorAt : NotAll p e xs -> (Nat, (x ** e x))
     errorAt (Here msg _)
-      = (Z,msg)
+      = (Z, (_ ** msg))
 
     errorAt (There _ later) with (errorAt later)
       errorAt (There _ later) | (loc, m) = (S loc, m)
 
   export
   all : (f  : (x : a)
-                -> DecInfo e (p x))
+                -> DecInfo (e x) (p x))
      -> (xs : Vect n a)
            -> DecInfo (NotAll p e xs)
                       (All    p   xs)
