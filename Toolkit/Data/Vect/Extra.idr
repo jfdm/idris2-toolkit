@@ -137,8 +137,7 @@ namespace Quantifier
 
 
     export
-    atIndex : {type : Type}
-           -> {p    : type -> Type}
+    atIndex : {p    : type -> Type}
            -> (dec  : (this : type) -> Dec (p this))
            -> (idx  : Fin n)
            -> (xs   : Vect n type)
@@ -183,8 +182,7 @@ namespace Quantifier
       indexDiffers f (At x) = f Refl
 
       export
-      atIndexI : {type : Type}
-              -> {p    : type -> Type}
+      atIndexI : {p    : type -> Type}
               -> {m,n  : Nat}
               -> (dec  : (this : type) -> Dec (p this))
               -> (idx  : Fin m)

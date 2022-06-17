@@ -10,13 +10,16 @@
 module Toolkit.Decidable.Informative
 
 import Decidable.Equality
-
 %default total
+
 
 public export
 data DecInfo : (errType : Type) -> (prop : Type) -> Type where
-   Yes : (prfWhy : prop) -> DecInfo errType prop
-   No  : (msgWhyNot : errType) -> (prfWhyNot : prop -> Void) -> DecInfo errType prop
+   Yes : (prfWhy : prop)
+                -> DecInfo errType prop
+   No  : (msgWhyNot : errType)
+      -> (prfWhyNot : prop -> Void)
+                   -> DecInfo errType prop
 
 namespace Toolkit.Decidable
   export
@@ -27,7 +30,13 @@ namespace Toolkit.Decidable
   embed (No contra)
     = No () contra
 
-
+export
+embedUn : (prf : DecInfo e p)
+              -> Dec       p
+embedUn (Yes prfWhy)
+  = Yes prfWhy
+embedUn (No _ no)
+  = No no
 
 export
 embed : (f   : a -> e)
