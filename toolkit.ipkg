@@ -20,6 +20,7 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Data.List.Size
         , Toolkit.Data.List.View.PairWise
         , Toolkit.Data.List.AtIndex
+        , Toolkit.Data.List.Thinning
 
         , Toolkit.Data.DList
         , Toolkit.Data.DList.Elem
@@ -57,10 +58,14 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Options.ArgParse.Parser.API
         , Toolkit.Options.ArgParse
 
+        , Toolkit.Commands
+        , Toolkit.Logging.Simple
+
         , Toolkit.Decidable.Do
         , Toolkit.Decidable.Equality.Views
 
         , Toolkit.DeBruijn.Context.Item
+        , Toolkit.DeBruijn.Variable
         , Toolkit.DeBruijn.Context
         , Toolkit.DeBruijn.Environment
         , Toolkit.DeBruijn.Renaming

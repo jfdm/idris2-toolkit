@@ -1,4 +1,8 @@
 ||| A graph whose vertices have a restricted in/out degree.
+|||
+||| Copyright : see COPYRIGHT
+||| License   : see LICENSE
+|||
 module Toolkit.Data.Graph.EdgeBounded
 
 import Decidable.Equality
@@ -13,7 +17,7 @@ import Toolkit.Decidable.Informative
 import Toolkit.Data.Nat
 import Toolkit.Data.Pair
 import Toolkit.Data.List.Size
-import Toolkit.Data.List.Occurs.Does
+import public Toolkit.Data.List.Occurs.Does
 
 %default total
 
