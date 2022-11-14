@@ -70,8 +70,8 @@ namespace Auto
 
 public export
 data LT : Whole -> Whole -> Type where
-  IsLT : (prf : LT min max)
-       -> LT (W min prfA) (W max prfB)
+  IsLT : (prf : LT mi ma)
+       -> LT (W mi prfA) (W ma prfB)
 
 isNotLT : (LTE (S n) k -> Void) -> LT (W n prf) (W k x) -> Void
 isNotLT f (IsLT y) = f y
@@ -84,8 +84,8 @@ isLT (W n prf) (W k x) with (isLTE (S n) k)
 
 public export
 data LTE : Whole -> Whole -> Type where
-  IsLTE : (prf : LTE min max)
-       -> LTE (W min prfA) (W max prfB)
+  IsLTE : (prf : LTE mi ma)
+       -> LTE (W mi prfA) (W ma prfB)
 
 
 isLTENot : (contra : LTE n k -> Void)
@@ -110,8 +110,8 @@ namespace IsLteNatWhole
 
   public export
   data LTE : Nat -> Whole -> Type where
-    IsLTE : (prf : LTE min max)
-                -> LTE min (W max prfMax)
+    IsLTE : (prf : LTE mi ma)
+                -> LTE mi (W ma prfMax)
 
   isLTENot : (LTE n k -> Void) -> IsLteNatWhole.LTE n (W k prf) -> Void
   isLTENot f (IsLTE x) = f x

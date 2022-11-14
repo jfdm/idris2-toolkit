@@ -5,51 +5,44 @@
 |||
 module Toolkit.DeBruijn.Renaming
 
-import Decidable.Equality
-import Data.DPair
+import public Toolkit.Data.SnocList.AtIndex
 
-import Toolkit.Decidable.Informative
-
-import Toolkit.Data.List.AtIndex
-import Toolkit.Data.DList
-import Toolkit.Data.DList.AtIndex
-
-import Toolkit.DeBruijn.Context
 import public Toolkit.DeBruijn.Variable
 
 %default total
 
 
 public export
-interface Rename (type : Type) (term : List type -> type -> Type) | term where
-  rename : {old, new : List type}
-        -> (f : {ty : type} -> IsVar old ty
-                            -> IsVar new ty)
-        -> ({ty : type} -> term old ty
-                        -> term new ty)
+interface Rename (0 type : Type) (0 term : SnocList type -> type -> Type) | term where
+  rename : {0 old, new : SnocList type}
+        -> (f : {0 ty : type} -> IsVar old ty
+                              -> IsVar new ty)
+        -> ({0 ty : type} -> term old ty
+                          -> term new ty)
 
   %inline
-  embed : {ty   : type}
-       -> {ctxt : List type}
+  embed : {0 ty   : type}
+       -> {0 ctxt : SnocList type}
                -> IsVar ctxt ty
                -> term  ctxt ty
 
 public export
 %inline
-weakens : {type : Type}
-       -> {term : List type -> type -> Type}
+weakens : {0 type : Type}
+       -> {0 term : SnocList type -> type -> Type}
        -> Rename type term
-       => {old, new : List type}
-       -> (f : {ty  : type}
+       => {0 old, new : SnocList type}
+       -> (f : {0 ty  : type}
                    -> IsVar old ty
                    -> term  new ty)
-       -> ({ty,type' : type}
-              -> IsVar (old += type') ty
-              -> term  (new += type') ty)
+       -> ({0 ty,type' : type}
+              -> IsVar (old :< type') ty
+              -> term  (new :< type') ty)
 
-weakens f (V 0 Here)
-  = embed (V Z Here)
-weakens f (V (S idx) (There later))
-  = rename shift (f (V idx later))
+weakens f v@_ with (view v)
+  _ | Here
+    = embed here
+  _ | There w
+    = rename shift (f w)
 
 -- [ EOF ]

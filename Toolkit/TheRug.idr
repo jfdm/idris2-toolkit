@@ -238,6 +238,16 @@ namespace Traverse
                   -> TheRug e (List b)
     traverse = traverse' Nil
 
+    export
+    traverse_ : (f  : a -> TheRug e ())
+             -> (xs : List a)
+                   -> TheRug e ()
+    traverse_ f []
+      = pure ()
+    traverse_ f (x :: xs)
+      = do f x
+           traverse_ f xs
+
   namespace Vect
     export
     %inline
@@ -249,6 +259,67 @@ namespace Traverse
 
     traverse f (x :: xs)
       = [| f x :: traverse f xs |]
+
+
+    export
+    traverse_ : (f  : a -> TheRug e ())
+             -> (xs : Vect n a)
+                   -> TheRug e ()
+    traverse_ f []
+      = pure ()
+    traverse_ f (x :: xs)
+      = do f x
+           traverse_ f xs
+
+  namespace DList
+    export
+    traverse : (f  : forall a . t a -> TheRug e (t a))
+            -> (xs : DList ty t ts)
+                  -> TheRug e (DList ty t ts)
+    traverse f []
+      = pure []
+    traverse f (elem :: rest)
+      = do x <- f elem
+           xs <- traverse f rest
+           pure (x::xs)
+    export
+    traverse_ : (f  : forall a . t a -> TheRug e ())
+             -> (xs : DList ty t ts)
+                   -> TheRug e ()
+    traverse_ f []
+      = pure ()
+    traverse_ f (elem :: rest)
+      = do f elem
+           traverse_ f rest
+
+namespace DList
+
+  export
+  map : (f : forall a . t a -> TheRug e (b a))
+     -> (xs : DList ty t ts)
+           -> TheRug e (DList ty b ts)
+  map f [] = pure []
+  map f (elem :: rest)
+    = pure $ !(f elem) :: !(map f rest)
+
+
+  export
+  foldr : (forall a . t a -> b -> TheRug e b)
+       -> (x  : b)
+       -> (xs : DList ty t ts)
+             -> TheRug e b
+  foldr f acc [] = pure acc
+  foldr f acc (elem :: rest)
+    = f elem !(foldr f acc rest)
+
+  export
+  foldl : (forall a . b -> t a -> TheRug e b)
+       -> (x  : b)
+       -> (xs : DList ty t ts)
+             -> TheRug e b
+  foldl f x [] = pure x
+  foldl f x (elem :: rest)
+    = foldl f (!(f x elem)) rest
 
 namespace IO
 

@@ -29,16 +29,16 @@ Eq Opts where
 
 ||| Convert Arguments into Options
 convOpts : Arg -> Opts -> Maybe Opts
-convOpts (File x)     o = Just $ record {args = x :: args o} o
+convOpts (File x)     o = Just $ {args := x :: args o} o
 convOpts (KeyValue k v) o =
   case k of
-    "from"    => Just $ record {from = Just v} o
+    "from"    => Just $  {from := Just v} o
     otherwise => Nothing
 convOpts (Flag x) o =
   case x of
-    "help"    => Just $ record {help = True} o
-    "verbose" => Just $ record {verbose = True} o
-    "version" => Just $ record {version = True} o
+    "help"    => Just $  {help := True} o
+    "verbose" => Just $  {verbose := True} o
+    "version" => Just $  {version := True} o
     otherwise => Nothing
 
 defOpts : Opts

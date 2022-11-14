@@ -28,8 +28,8 @@ import public Toolkit.Decidable.Equality.Indexed
 ||| @elemTy The type of the elements within the list
 ||| @as     The List used to contain the different values within the type.
 public export
-data DVect : (aTy : Type)
-          -> (elemTy : aTy -> Type)
+data DVect : (0 aTy : Type)
+          -> (0 elemTy : aTy -> Type)
           -> (len : Nat)
           -> (as : Vect len aTy)
           -> Type where
@@ -39,8 +39,7 @@ data DVect : (aTy : Type)
   |||
   ||| @ex The element to add
   ||| @rest The list for `elem` to be added to.
-  (::) : {x : aTy}
-      -> (ex : elemTy x)
+  (::) : (ex : elemTy x)
       -> (rest : DVect aTy elemTy n xs)
       -> DVect aTy elemTy (S n) (x::xs)
 

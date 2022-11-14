@@ -20,21 +20,29 @@ import public Data.List.Elem
 ||| @elemTy The type of the elements within the list
 ||| @as     The List used to contain the different values within the type.
 public export
-data DList : (aTy : Type)
-          -> (elemTy : aTy -> Type)
+data DList : (0 aTy : Type)
+          -> (0 elemTy : aTy -> Type)
           -> (as : List aTy)
-          -> Type where
-  ||| Create an empty List
-  Nil  : DList aTy elemTy Nil
-  ||| Cons
-  |||
-  ||| @elem The element to add
-  ||| @rest The list for `elem` to be added to.
-  (::) : {x : aTy}
-      -> (elem : elemTy x)
-      -> (rest : DList aTy elemTy xs)
-      -> DList aTy elemTy (x::xs)
+          -> Type
+  where
+    ||| Create an empty List
+    Nil  : DList aTy elemTy Nil
+    ||| Cons
+    |||
+    ||| @elem The element to add
+    ||| @rest The list for `elem` to be added to.
+    (::) : (elem : elemTy x)
+        -> (rest : DList aTy elemTy xs)
+        -> DList aTy elemTy (x::xs)
 
+
+public export
+map : (f  : forall x . this x -> that x)
+   -> (ts : DList ty this xs)
+         -> DList ty that xs
+map f [] = []
+map f (elem :: rest)
+  = f elem :: map f rest
 
 public export
 mapToList : (forall x . e x -> b)

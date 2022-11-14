@@ -20,32 +20,30 @@ import public Toolkit.Decidable.Equality.Indexed
 ||| @p     A predicate
 ||| @xs      The list itself.
 public export
-data Any : (idx    : Type)
-        -> (type   : idx -> Type)
-        -> (p      : {i : idx} -> (x : type i) -> Type)
-        -> {is     : List idx}
-        -> (xs     : DList idx type is)
-                  -> Type
+data Any : (0 idx    : Type)
+        -> (0 type   : idx -> Type)
+        -> (0 p      : forall i .  (x : type i) -> Type)
+        -> {  is     : List idx}
+        -> (  xs     : DList idx type is)
+                    -> Type
     where
       ||| Proof that the element is at the front of the list.
-      H : {p : {i : idx} -> (x : type i) -> Type}
-       -> {i   : idx}
-       -> {y   : type i}
-       -> (prf : p y)
-              -> Any idx type p (y :: xs)
+      H : {0 p   : forall i .  (x : type i) -> Type}
+       -> (  prf : p y)
+                -> Any idx type p (y :: xs)
 
       ||| Proof that the element is found later in the list.
-      T : {p : {i : idx} -> (x : type i) -> Type}
-       -> (contra : p x' -> Void)
-       -> (later : Any idx type p       xs)
-                -> Any idx type p (x' ::xs)
+      T : {0 p      : forall i .  (x : type i) -> Type}
+       -> (  contra : p x' -> Void)
+       -> (  later  : Any idx type p       xs)
+                  -> Any idx type p (x' ::xs)
 
-empty : {p : {i : idx} -> (x : type i) -> Type} -> Any idx type p Nil -> Void
+empty : {0 p : forall i .  (x : type i) -> Type} -> Any idx type p Nil -> Void
 empty (H prf) impossible
 empty (T contra later) impossible
 
 
-isNotThere : {p : {i : idx} -> (x : type i) -> Type}
+isNotThere : {0 p : forall i .  (x : type i) -> Type}
           -> (Any idx type p rest -> Void)
           -> (p i -> Void)
           -> Any idx type p (i :: rest) -> Void
@@ -53,8 +51,8 @@ isNotThere f g (H prf) = g prf
 isNotThere f g (T contra later) = f later
 
 export
-any : {p : {i : idx} -> (x : type i) -> Type}
-   -> (f : {i : idx} -> (x : type i) -> DecInfo err (p x))
+any : {0 p : forall i . (x : type i) -> Type}
+   -> (f : forall i . (x : type i) -> DecInfo err (p x))
    -> (xs : DList idx type is)
          -> Dec (Any idx type p xs)
 any f [] = No empty

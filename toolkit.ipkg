@@ -3,12 +3,19 @@ package toolkit
 depends = contrib
 
 modules = Toolkit.Decidable.Equality.Indexed
+        , Toolkit.Decidable.Equality.Views
+
+        , Toolkit.Decidable.Informative
 
         , Toolkit.Data.Pair
         , Toolkit.Data.Nat
+        , Toolkit.Data.Whole
+        , Toolkit.Data.Spaces
+        , Toolkit.Data.Fin
 
         , Toolkit.Data.Vect.Leanings
         , Toolkit.Data.Vect.Extra
+        , Toolkit.Data.Vect.Quantifiers
 
         , Toolkit.Data.List.Filter
         , Toolkit.Data.List.Interleaving
@@ -21,23 +28,35 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.Data.List.View.PairWise
         , Toolkit.Data.List.AtIndex
         , Toolkit.Data.List.Thinning
+        , Toolkit.Data.List.Union
+        , Toolkit.Data.List.Pointwise
+        , Toolkit.Data.List.Quantifiers
+        , Toolkit.Data.List.Member
+        , Toolkit.Data.List.DeBruijn
 
         , Toolkit.Data.DList
+        , Toolkit.Data.DList.Union
         , Toolkit.Data.DList.Elem
         , Toolkit.Data.DList.Any
         , Toolkit.Data.DList.AtIndex
-
         , Toolkit.Data.DList.Interleaving
 
         , Toolkit.Data.DVect
         , Toolkit.Data.DVect.Elem
 
-        , Toolkit.Data.Nat
+        , Toolkit.Data.SnocList.Thinning
+        , Toolkit.Data.SnocList.Quantifiers
+        , Toolkit.Data.SnocList.Subset
+        , Toolkit.Data.SnocList.AtIndex
+
+        , Toolkit.Data.DSnocList
+        , Toolkit.Data.DSnocList.Any
+        , Toolkit.Data.DSnocList.AtIndex
+
+        , Toolkit.Data.DList.Interleaving
 
         , Toolkit.Data.Location
         , Toolkit.Data.Rig
-
-        , Toolkit.Decidable.Informative
 
         , Toolkit.Data.Graph.EdgeBounded
         , Toolkit.Data.Graph.EdgeBounded.DegreeCommon
@@ -50,9 +69,16 @@ modules = Toolkit.Decidable.Equality.Indexed
 
         , Toolkit.Text.Lexer.Run
 
+        , Toolkit.Data.Relation
+        , Toolkit.Data.Relation.List
+
+        , Toolkit.Data.Comparison.Informative
+
         , Toolkit.System
 
         , Toolkit.Options.ArgParse.Error
+        , Toolkit.Options.ArgParse.Model
+        , Toolkit.Options.ArgParse.Test
         , Toolkit.Options.ArgParse.Lexer
         , Toolkit.Options.ArgParse.Parser
         , Toolkit.Options.ArgParse.Parser.API
@@ -68,7 +94,17 @@ modules = Toolkit.Decidable.Equality.Indexed
         , Toolkit.DeBruijn.Variable
         , Toolkit.DeBruijn.Context
         , Toolkit.DeBruijn.Environment
+        , Toolkit.DeBruijn.Evaluation
         , Toolkit.DeBruijn.Renaming
         , Toolkit.DeBruijn.Substitution
+        , Toolkit.DeBruijn.Progress
+
+        , Toolkit.CoDeBruijn
+        , Toolkit.CoDeBruijn.Variable
+        , Toolkit.CoDeBruijn.Binding
 
         , Toolkit.TheRug
+        , Toolkit.TheRug.Logging.Simple
+
+        , Toolkit.AST
+        , Toolkit.Commands

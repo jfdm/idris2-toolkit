@@ -22,11 +22,11 @@ import Decidable.Equality
 
 public export
 data DecInfo : (errType : Type) -> (prop : Type) -> Type where
-   Yes : (prfWhy : prop)
-                -> DecInfo errType prop
-   No  : (msgWhyNot : errType)
-      -> (prfWhyNot : prop -> Void)
-                   -> DecInfo errType prop
+   Yes : (prf : prop)
+             -> DecInfo errType prop
+   No  : (msg : errType)
+      -> (no  : prop -> Void)
+             -> DecInfo errType prop
 
 namespace Toolkit.Decidable
   export

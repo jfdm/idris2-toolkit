@@ -9,43 +9,32 @@ import Decidable.Equality
 import Data.DPair
 import Data.Singleton
 
+import Data.SnocList
+import Data.SnocList.Quantifiers
+
 import Toolkit.Decidable.Informative
 
-import public Toolkit.Data.List.AtIndex
-import Toolkit.Data.DList
-import Toolkit.Data.DList.AtIndex
+import public Toolkit.Data.SnocList.AtIndex
+
+import public Toolkit.Data.DSnocList
+import        Toolkit.Data.DSnocList.AtIndex
 
 import public Toolkit.DeBruijn.Context.Item
 
 %default total
 
--- A reverse cons operator.
-infixr 6 +=
-
-namespace List
-  ||| Append `x` to the head of `xs`.
-  public export
-  (+=) : List a -> a -> List a
-  (+=) xs x = x :: xs
-
 public export
-Context : (kind : Type) -> (types : List kind) -> Type
-Context kind = DList kind Item
+Context : (0 kind : Type) -> (types : SnocList kind) -> Type
+Context kind = DSnocList kind Item
+
 
 export
 extend : (ctxt  : Context kind types)
       -> (label : String)
       -> (type  : kind)
-               -> Context kind (types += type)
+               -> Context kind (types :< type)
 extend ctxt label type
-  = I label type :: ctxt
-
-export
-(+=) : (ctxt  : Context kind types)
-    -> (label : String)
-    -> (type  : kind)
-             -> Context kind (types += type)
-(+=) = extend
+  = ctxt :< I label type
 
 ||| A quantifier over the context that the given predicate holds.
 |||
@@ -53,89 +42,101 @@ export
 ||| quantifier is `Any`.
 |||
 public export
-data Exists : (kind : Type)
-           -> (pred  : (type : kind) -> Type)
-           -> (key   : String)
-           -> {types : List kind}
-           -> (ctxt  : Context kind types)
-                    -> Type
+data Exists : (0 kind  : Type)
+           -> (0 pred  : (type : kind) -> Type)
+           -> (  key   : String)
+           -> (  types : SnocList kind)
+           -> (  ctxt  : Context kind types)
+                      -> Type
   where
-    E : {ctxt : Context kind types}
-     -> {pred : (type : kind) -> Type}
+    E : -- {ctxt : Context kind types}
+        {0 pred : (type : kind) -> Type}
      -> (type : kind)
      -> (item : Item type)
      -> (prf  : pred type)
-     -> {loc  : Nat}
      -> (locC : HoldsAtIndex kind Item (Holds kind pred key) ctxt loc)
      -> (locN : AtIndex type types loc)
-             -> Exists kind pred key ctxt
+             -> Exists kind pred key types ctxt
+
+public export
+data DeBruijn : (0 kind  : Type)
+             -> (types   : SnocList kind)
+             -> (ctxt    : Context kind types)
+                        -> Type
+  where
+    DB : (type : kind)
+      -> (idx  : AtIndex type types loc)
+              -> DeBruijn kind types ctxt
 
 export
-deBruijn : {ctxt : Context kind types}
-        -> (prf  : Exists kind pred key ctxt)
-                -> (type ** DPair Nat (AtIndex type types))
+deBruijn : (prf  : Exists kind pred key types ctxt)
+                -> DeBruijn kind types ctxt
+
 deBruijn (E type item prf locC locN)
-  = (type ** _ ** locN)
+  = DB type locN
+
 
 namespace Exists
   public export
   data Error type = NotFound
                   | NotSatisfied type
 
-isEmpty : Exists kind pred key [] -> Void
-isEmpty (E _ _ _ (Here x) _) impossible
-isEmpty (E _ _ _ (There contra later) _) impossible
+Uninhabited (Exists kind pred key Lin Lin) where
+  uninhabited (E _ _ _ _ Here) impossible
+  uninhabited (E _ _ _ _ (There later)) impossible
 
-notLater : (Holds  kind pred key  h      -> Void)
-        -> (Exists kind pred key       t -> Void)
-        ->  Exists kind pred key (h :: t)
+
+notLater : (Holds  kind pred key       h  -> Void)
+        -> (Exists kind pred key ts  t       -> Void)
+        ->  Exists kind pred key (ts :< t') (t :< h)
         -> Void
-notLater f g (E type item prf (Here x) locN) = f x
-notLater f g (E type item prf (There contra later) (There x)) = g (E type item prf later x)
+notLater f g (E type item prf (Here x) locN)
+  = f x
+notLater f g (E type item prf (There contra later) (There x))
+  = g (E type item prf later x)
+
 
 export
-exists : {kind  : Type}
-      -> {types : List kind}
-      -> {pred  : (type : kind) -> Type}
-      -> (func  : (type : kind) -> DecInfo err (pred type))
+exists : (func  : (type : kind) -> DecInfo err (pred type))
       -> (key   : String)
       -> (ctxt  : Context kind types)
                -> DecInfo (Exists.Error err)
-                          (Exists kind pred key ctxt)
+                          (Exists kind pred key types ctxt)
+exists f key [<]
+  = No NotFound absurd
 
-exists f _ []
-  = No NotFound
-       isEmpty
-exists f key (head :: tail) with (holds f key head)
-  exists f key ((I str x) :: tail) | (Yes (H prfK prf))
-    = Yes (E _ (I str x) prf (Here (H prfK prf)) Here)
+exists f key (t :< h) with (holds f key h)
+  exists f key (t :< (I str x)) | (Yes (H prfK prf))
+    = Yes (E x (I str x) prf (Here (H prfK prf)) Here)
 
-  exists f key (head :: tail) | (No msg contra) with (exists f key tail)
-    exists f key (head :: tail) | (No msg contra) | (Yes (E type item prf locC locN))
-      = Yes (E type item prf (There contra locC) (There locN))
+  exists f key (t :< h) | (No msg no) with (exists f key t)
+    exists f key (t :< h) | (No msg no) | (Yes (E type item prf locC locN))
+      = Yes (E type item prf (There no locC) (There locN))
 
     -- [ Note ]
     --
-    -- we need to ensure that the 'correct' error message has been satisfied.
-    exists f key (head :: tail) | (No (NotSatisfied x) contra) | (No msgR contraR)
+    -- we need to ensure that the 'correct' error message is propagated..
+
+    exists f key (t :< h) | (No (NotSatisfied x) no) | (No msgT noT)
       = No (NotSatisfied x)
-           (notLater contra contraR)
-    exists f key (head :: tail) | (No (WrongName x y) contra) | (No msgR contraR)
-      = No msgR
-           (notLater contra contraR)
+           (notLater no noT)
+
+    exists f key (t :< h) | (No (WrongName str str1) no) | (No msgT noT)
+      = No msgT
+           (notLater no noT)
 
 
 namespace Lookup
 
   public export
-  IsBound : {kind  : Type}
-         -> {types : List kind}
-         -> (key   : String)
+  IsBound : (key   : String)
+         -> (types : SnocList kind)
          -> (ctxt  : Context kind types)
                   -> Type
-  IsBound {kind} str ctxt
+  IsBound {kind} str types ctxt
     = Exists kind Singleton
                 str
+                types
                 ctxt
 
   single : (item : kind)
@@ -144,12 +145,21 @@ namespace Lookup
 
 
   export
-  lookup : {kind  : Type}
-        -> {types : List kind}
-        -> (str   : String)
+  lookup : (str   : String)
         -> (ctxt  : Context kind types)
                  -> DecInfo (Exists.Error ())
-                            (IsBound str ctxt)
+                            (IsBound str types ctxt)
   lookup = exists single
+
+export
+rebuild : (f  : a -> String)
+       -> (as : SnocList a)
+             -> Context a as
+rebuild _ [<]
+  = [<]
+
+rebuild f (xs :< x)
+  = rebuild f xs :< I (f x) x
+
 
 -- [ EOF ]

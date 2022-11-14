@@ -11,9 +11,9 @@ import Data.DPair
 
 import Toolkit.Decidable.Informative
 
-import Toolkit.Data.List.AtIndex
-import Toolkit.Data.DList
-import Toolkit.Data.DList.AtIndex
+import Toolkit.Data.SnocList.AtIndex
+import Toolkit.Data.DSnocList
+import Toolkit.Data.DSnocList.AtIndex
 
 import Toolkit.DeBruijn.Context.Item
 import Toolkit.DeBruijn.Context
@@ -29,17 +29,19 @@ import Toolkit.DeBruijn.Renaming
 |||       dependent type or a function that computes a type.
 ||| @ctxt The typing context.
 public export
-Env : (t : Type) -> (obj : t -> Type) -> (ctxt : List t) -> Type
-Env = DList
+Env : (0 t    : Type)
+   -> (0 obj  : t -> Type)
+   -> (  ctxt : SnocList t)
+             -> Type
+Env = DSnocList
 
 ||| Add an object to our execution environment.
 ||| @env The typing environment.
 export
-extend : {t : ty}
-      -> (env : Env ty e ctxt)
+extend : (env : Env ty e ctxt)
       -> (obj : e t)
-      -> Env ty e (t::ctxt)
-extend env obj = obj :: env
+      -> Env ty e (ctxt :< t)
+extend = (:<)
 
 namespace Elem
   ||| Read an object from our typing environment.
@@ -50,8 +52,7 @@ namespace Elem
   read : (idx : Elem t ctxt)
       -> (env : Env ty e ctxt)
       -> e t
-  read Here      (obj::store) = obj
-  read (There x) (obj::store) = read x store
+  read = lookup
 
   ||| Add an object to our execution environment.
   |||
@@ -63,8 +64,7 @@ namespace Elem
         -> (obj : e t)
         -> (env : Env ty e ctxt)
         -> Env ty e ctxt
-  update Here      obj (_    :: store) = obj  :: store
-  update (There x) obj (obj' :: store) = obj' :: update x obj store
+  update = replace
 
 namespace IsVar
   ||| Read an object from our typing environment.
@@ -75,9 +75,9 @@ namespace IsVar
   read : (idx : IsVar ctxt t)
       -> (env : Env ty e ctxt)
       -> e t
-  read (V 0 Here) (elem :: rest)
+  read (V 0 Here) (rest :< elem)
     = elem
-  read (V (S idx) (There later)) (elem :: rest)
+  read (V (S idx) (There later)) (rest :< elem)
     = read (V idx later) rest
 
   ||| Add an object to our execution environment.
@@ -90,9 +90,9 @@ namespace IsVar
         -> (obj : e t)
         -> (env : Env ty e ctxt)
         -> Env ty e ctxt
-  update (V 0 Here) obj (elem :: rest)
-    = obj :: rest
-  update (V (S k) (There later)) obj (elem :: rest)
-    = elem :: update (V k later) obj rest
+  update (V 0 Here) obj (rest :< elem)
+    = rest :< obj
+  update (V (S k) (There later)) obj (rest :< elem)
+    = update (V k later) obj rest :< elem
 
 -- [ EOF ]

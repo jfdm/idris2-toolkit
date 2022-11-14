@@ -22,27 +22,25 @@ import Toolkit.Data.DList
 ||| @p     A predicate
 ||| @xs      The list itself.
 public export
-data HoldsAtIndex : (type   : Type)
-                 -> (item   : type -> Type)
-                 -> (p      : {i : type} -> (x : item i) -> Type)
-                 -> {is     : List type}
-                 -> (xs     : DList type item is)
-                 -> (idx    : Nat)
+data HoldsAtIndex : (0 type   : Type)
+                 -> (0 item   : type -> Type)
+                 -> (0 p      : {i : type} -> (x : item i) -> Type)
+                 -> {  is     : List type}
+                 -> (  xs     : DList type item is)
+                 -> (  idx    : Nat)
                            -> Type
     where
       ||| Proof that the element is at the front of the list.
-      Here : {p   : {i : type} -> (x : item i) -> Type}
-          -> {i   : type}
-          -> {x   : item i}
-          -> (prf : p x)
-                 -> HoldsAtIndex type item p (x::xs) Z
+      Here : {0 p   : forall i . (x : item i) -> Type}
+          -> (  prf : p x)
+                   -> HoldsAtIndex type item p (x::xs) Z
 
 
       ||| Proof that the element is found later in the list.
-      There : {p      : {i : type} -> (x : item i) -> Type}
-           -> (contra : p x' -> Void)
-           -> (later  : HoldsAtIndex type item p      xs     loc)
-                     -> HoldsAtIndex type item p (x'::xs) (S loc)
+      There : {0 p      : forall i . (x : item i) -> Type}
+           -> (  contra : p x' -> Void)
+           -> (  later  : HoldsAtIndex type item p      xs     loc)
+                       -> HoldsAtIndex type item p (x'::xs) (S loc)
 
 namespace Find
   namespace HoldsAtIndex
@@ -50,7 +48,7 @@ namespace Find
     data Error type = IsEmpty
                     | Later type (HoldsAtIndex.Error type)
 
-  isEmpty : {p  : {i : type} -> (x : item i) -> Type}
+  isEmpty : {p  : forall i . (x : item i) -> Type}
          -> DPair Nat (HoldsAtIndex type item p [])
          -> Void
   isEmpty (MkDPair loc prf) with (prf)
@@ -58,7 +56,7 @@ namespace Find
     isEmpty (MkDPair loc prf) | (MkDPair _ (There _)) impossible
 
 
-  notLater : {p : {i : type} -> (x : item i) -> Type}
+  notLater : {p : forall i . (x : item i) -> Type}
           -> (DPair Nat (HoldsAtIndex type item p rest) -> Void)
           -> (p i -> Void)
           -> DPair Nat (HoldsAtIndex type item p (i :: rest))
@@ -69,8 +67,8 @@ namespace Find
     = f (MkDPair _ later)
 
   export
-  holdsAtIndex : {p  : {i : type} -> (x : item i) -> Type}
-              -> (f  : {i : type} -> (x : item i) -> DecInfo err (p x))
+  holdsAtIndex : {p  : forall i . (x : item i) -> Type}
+              -> (f  : forall i . (x : item i) -> DecInfo err (p x))
               -> (xs : DList type item is)
                     -> DecInfo (HoldsAtIndex.Error err)
                                (DPair Nat (HoldsAtIndex type item p xs))
