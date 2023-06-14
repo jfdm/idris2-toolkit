@@ -5,7 +5,7 @@ import public Toolkit.Data.Location
 import public Toolkit.Data.DVect
 
 public export
-data AST : (desc       : (k     : kind)
+data AST : (0 desc     : (k     : kind)
                       -> (arity : Nat)
                       -> (meta  : Vect arity kind)
                                -> Type)
